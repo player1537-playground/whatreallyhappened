@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+
+die() { printf $'WhatReallyHappened Error: %s\n' "$*" >&2; exit 1; }
+
+if ! source ctypes.sh; then
+    if ! source @ctypes.sh_EXECUTABLE@; then
+        die "Could not load ctypes.sh"
+    fi
+fi
+
+if ! dlopen libwhatreallyhappened.so; then
+    if ! dlopen $<TARGET_FILE:whatreallyhappened>; then
+        die "Could not open libwhatreallyhappened.so"
+    fi
+fi
+dlopen libwhatreallyhappened.so || die "Could not open libwhatreallyhappened.so"
+
+wrh_open() {
+    local filename mode ret
+    filename=${1:?need filename}
+    mode=${2:-w}
+
+    dlcall -n ret -r int wrh_open string:"${filename:?}" string:"${mode:?}"
+    return ${ret#int:}
+}
+
+wrh_log() {
+    local name message IFS
+    name=${1:?need variable name}
+    shift
+    IFS=$' '
+    message="$*"
+
+    dlcall wrh_log string:"${name:?}" string:"%s" string:"${message:?}"
+}
+
+wrh_push() {
+    local message IFS
+    IFS=$' '
+    message="$*"
+
+    dlcall wrh_push string:"%s" string:"${message:?}"
+}
+
+wrh_pop() {
+    local message IFS
+    IFS=$' '
+    message="$*"
+
+    dlcall wrh_pop string:"%s" string:"${message:?}"
+}
+
+wrh_save() {
+    local opt OPTIND OPTARG opt_name
+    opt_name=WRH_SAVE_VALUE
+    while getopts "n:" opt; do
+        case "$opt" in
+        (n) opt_name=$OPTARG;;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    local _the_pointer
+    local _the_structure
+
+    dlcall -n _the_pointer -r pointer malloc ulong:8
+
+    dlcall wrh_save $_the_pointer
+
+    _the_structure=( string )
+    unpack $_the_pointer _the_structure
+
+    eval "${opt_name}=\${_the_structure[0]#string:}"
+}
+
+wrh_load() {
+    local info
+    info=${1:?need info}
+
+    dlcall wrh_load string:"${info:?}"
+}
+
+wrh_write() {
+    local line
+    line=${1:?need line}
+
+    dlcall wrh_write string:"${line:?}"
+}

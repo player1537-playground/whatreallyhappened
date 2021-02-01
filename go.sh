@@ -46,6 +46,8 @@ go-make() {
 go-exec() {
 	export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+${LD_LIBRARY_PATH:?}:}${build:?}
 	export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+${LD_LIBRARY_PATH:?}:}${stage:?}/lib
+	export PATH=${build:?}/whatreallyhappened/bash/ctypes.sh-prefix/bin${PATH:+:${PATH:?}}
+	export PATH=${stage:?}/bin${PATH:+:${PATH:?}}
 	exec "$@"
 }
 
