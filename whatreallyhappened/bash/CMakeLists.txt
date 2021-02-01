@@ -1,19 +1,12 @@
 cmake_minimum_required(VERSION 3.19.0 FATAL_ERROR)
+include(ConfigureAndGenerate)
 
 find_package(ctypes.sh REQUIRED)
 
-file(
-    READ "${CMAKE_CURRENT_SOURCE_DIR}/whatreallyhappened.bash.in"
-    _tmp_in
-)
-string(
-    CONFIGURE "${_tmp_in}" _tmp
-    @ONLY
-)
-file(
-    GENERATE
+configure_and_generate(
+    INPUT "${CMAKE_CURRENT_SOURCE_DIR}/whatreallyhappened.bash.in"
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/whatreallyhappened.bash"
-    CONTENT "${_tmp}"
+    AT_ONLY
 )
 
 install(

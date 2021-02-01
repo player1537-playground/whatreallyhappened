@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19.0 FATAL_ERROR)
-project(WhatReallyHappened)
+project(WhatReallyHappened VERSION 0.1.0)
 list(PREPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 find_package(UUID 1.0.3 REQUIRED)

@@ -1,35 +1,30 @@
 cmake_minimum_required(VERSION 3.19.0 FATAL_ERROR)
+include(ConfigureAndGenerate)
 
 # Thanks https://bloerg.net/2012/11/10/cmake-and-distutils.html
 
 find_program(PYTHON "python")
 
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in
-    ${CMAKE_CURRENT_BINARY_DIR}/setup.py
+configure_and_generate(
+    INPUT "${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in"
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/setup.py"
+    AT_ONLY
 )
 
-file(
-    READ "${CMAKE_CURRENT_SOURCE_DIR}/whatreallyhappened/__init__.py.in"
-    _tmp_in
-)
-string(
-    CONFIGURE "${_tmp_in}"
-    _tmp
-    @ONLY
-)
-file(
-    GENERATE
-    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/whatreallyhappened/__init__.py"
-    CONTENT "${_tmp}"
+configure_and_generate(
+    INPUT "${CMAKE_CURRENT_SOURCE_DIR}/whatreallyhappened.py.in"
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/whatreallyhappened.py"
+    AT_ONLY
 )
 
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/build/timestamp
-    COMMAND ${PYTHON} ${CMAKE_CURRENT_BINARY_DIR}/setup.py build
+    COMMAND ${PYTHON} ${CMAKE_CURRENT_BINARY_DIR}/setup.py sdist --format=zip
     COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_BINARY_DIR}/build/timestamp
     DEPENDS
-        ${CMAKE_CURRENT_BINARY_DIR}/whatreallyhappened/__init__.py
+        ${CMAKE_CURRENT_BINARY_DIR}/whatreallyhappened.py
+        ${CMAKE_CURRENT_BINARY_DIR}/setup.py
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 add_custom_target(
@@ -40,5 +35,10 @@ add_custom_target(
 )
 
 install(
-    CODE "execute_process(COMMAND ${PYTHON} ${CMAKE_CURRENT_BINARY_DIR}/setup.py install)"
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/dist/whatreallyhappened-${CMAKE_PROJECT_VERSION}.linux-x86_64.zip
+    TYPE LIB
 )
+
+#install(
+#    CODE "execute_process(COMMAND ${PYTHON} ${CMAKE_CURRENT_BINARY_DIR}/setup.py install)"
+#)
