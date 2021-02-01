@@ -4,26 +4,18 @@
 #include <stdint.h>
 #include <uuid/uuid.h>
 
-enum whatreallyhappened_error {
-    WRH_ERR_NONE = 0,
-    WRH_ERR__COUNT,
-};
+int wrh_open(char *filename, char *mode);
 
-const char *whatreallyhappened_error_lookup[WRH_ERR__COUNT] = {
-    "Success",
-};
+void wrh_log(char *name, char *message, ...);
 
-struct whatreallyhappened {
-    uuid_t wrh_task;
-    size_t wrh_maxlevels;
-    size_t wrh_nlevels;
-    uint32_t *wrh_levels;
-    enum whatreallyhappened_error wrh_errno;
+void wrh_push(char *message, ...);
 
-    uint32_t wrh_continued;
-    pthread_mutex_t *wrh_lock;
-};
+void wrh_save(char **info);
 
-struct whatreallyhappened *wrh_create();
+void wrh_load(const char *const info);
+
+void wrh_pop(char *message, ...);
+
+void wrh_write(char *line);
 
 #endif /* _WHATREALLYHAPPENED_WRH_H_ */

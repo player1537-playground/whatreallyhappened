@@ -7,103 +7,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
-
-
-//    void (*write)(char *line);
-//    void (*error)(void);
-//    void (*push)(char *message, ...);
-//    void (*log)(char *message, ...);
-//    void (*pop)(char *message, ...);
-//    void (*save)(char **info);
-//    void (*load)(const char *const info);
-//    struct whatreallyhappened *(*copy)(void);
-//    void (*destroy)(void);
-
-
-struct whatreallyhappened *wrh_init(FILE *f) {
-    uuid_clear(wrh->wrh_task);
-    wrh->wrh_maxlevels = 256;
-    wrh->wrh_nlevels = 0;
-    wrh->wrh_levels = malloc(wrh->wrh_maxlevels * sizeof(*wrh->wrh_levels));
-    wrh->wrh_errno = WRH_ERR_NONE;
-
-    wrh->wrh_write = ({
-        void _wrh_write_(char *line) {
-        }
-        _wrh_write_;
-    });
-
-    wrh->wrh_error = ({
-        void _wrh_error_(void) {
-            fprintf(stderr, "Error: %s (errno=%d)\n", whatreallyhappened_error_lookup[wrh->wrh_errno], wrh->wrh_errno);
-            wrh->wrh_errno = WRH_ERR_NONE;
-        }
-        _wrh_error_;
-    });
-
-    wrh->push = ({
-        void _wrh_push_(char *message, ...) {
-
-        }
-        _wrh_push_;
-    });
-
-    wrh->log = NULL;
-    wrh->pop = NULL;
-    wrh->save = NULL;
-    wrh->load = NULL;
-    wrh->copy = NULL;
-    wrh->destroy = NULL;
-}
-
-
-struct whatreallyhappened *wrh_create(FILE *f) {
-    struct whatreallyhappened *wrh;
-
-    wrh = malloc(sizeof(*wrh));
-    return wrh;
-}
-
-
-void wrh_write(struct whatreallyhappened *wrh, const char *line) {
-    fprintf(f, "%s\n", line);
-}
-
-
-void wrh_log(struct whatreallyhappened *wrh, const char *format, ...) {
-	struct timeval tv;
-	char value[1024];
-	va_list ap;
-	
-	gettimeofday(&tv, NULL);
-
-	va_start(ap, message);
-	vsnprintf(value, sizeof(value), message, ap);
-	va_end(ap);
-
-	if (wrh->wrh_continued) die("after continuing, start an action, not a log message");
-
-	if (wrh->wrh_nlevels == 0) {
-		die("cannot log message, create an action first");
-	} else {
-		wrh->wrh_levels[wrh->wrh_nlevels-1]++;
-	}
-	
-	pthread_mutex_lock(wrh->wrh_lock);
-	//writeLog(_t_task, _t_levels, _t_nlevels, &tv, name, value);
-	pthread_mutex_unlock(wrh->wrh_lock);
-}
-
-
-
-
-
-
-
-
-
-
 
 static int _initialized = 0;
 static pthread_mutex_t *_lock;
@@ -127,7 +30,7 @@ static void die(char *message, ...) {
 	exit(1);
 }
 
-static char *formatTask(uuid_t task) {
+static char *format_task(uuid_t task) {
 	static __thread char task_str[37];
 	static __thread uuid_t last_task;
 
@@ -139,7 +42,7 @@ static char *formatTask(uuid_t task) {
 	return task_str;
 }
 
-static char *formatLevel(int *levels, int nlevels) {
+static char *format_level(int *levels, int nlevels) {
 	static __thread char level_str[256];
 	static __thread int last_nlevels;
 	static __thread int last_level;
@@ -160,31 +63,31 @@ static char *formatLevel(int *levels, int nlevels) {
 	return level_str;
 }
 
-static void writeLine(char *line) {
+static void write_line(char *line) {
 	if (!_initialized) return;
 	fprintf(_file, "%s\n", line);
 }
 
-static void writeLog(uuid_t task, int *levels, int nlevels, struct timeval *tv, char *key, char *value) {
+static void write_log(uuid_t task, int *levels, int nlevels, struct timeval *tv, char *key, char *value) {
 	char *task_str, *level_str;
 
 	if (!_initialized) return;
 	if (!_t_initialized) return;
 
-	task_str = formatTask(task);
-	level_str = formatLevel(levels, nlevels);
+	task_str = format_task(task);
+	level_str = format_level(levels, nlevels);
 
 	fprintf(_file, "%s%s\t%ld.%06ld\t%s\t%s\n", task_str, level_str, tv->tv_sec, tv->tv_usec, key, value);
 }
 
-static void flushLogs(void) {
+static void flush_logs(void) {
 	if (!_initialized) return;
 	if (!_t_initialized) return;
 
 	fflush(_file);
 }
 
-static void threadInitialize(void) {
+static void thread_initialize(void) {
 	if (_t_initialized) return;
 	_t_levels = malloc(256 * sizeof(*_t_levels));
 	_t_nlevels = 0;
@@ -192,7 +95,7 @@ static void threadInitialize(void) {
 	_t_continued = 0;
 }
 
-int wrhLogToFile(char *filename, char *mode) {
+int wrh_open(char *filename, char *mode) {
 	FILE *file;
 
 	if (_initialized) {
@@ -217,12 +120,12 @@ int wrhLogToFile(char *filename, char *mode) {
 	return 0;
 }
 
-void wrhLogAction(char *message, ...) {
+void wrh_push(char *message, ...) {
 	struct timeval tv;
 	char value[1024];
 	va_list ap;
 
-	if (!_t_initialized) threadInitialize();
+	if (!_t_initialized) thread_initialize();
 	
 	gettimeofday(&tv, NULL);
 
@@ -242,16 +145,16 @@ void wrhLogAction(char *message, ...) {
 	}
 	
 	pthread_mutex_lock(_lock);
-	writeLog(_t_task, _t_levels, _t_nlevels, &tv, "@started", value);
+	write_log(_t_task, _t_levels, _t_nlevels, &tv, "@started", value);
 	pthread_mutex_unlock(_lock);
 }
 
-void wrhLogMessage(char *name, char *message, ...) {
+void wrh_log(char *name, char *message, ...) {
 	struct timeval tv;
 	char value[1024];
 	va_list ap;
 
-	if (!_t_initialized) threadInitialize();
+	if (!_t_initialized) thread_initialize();
 	
 	gettimeofday(&tv, NULL);
 
@@ -268,22 +171,22 @@ void wrhLogMessage(char *name, char *message, ...) {
 	}
 	
 	pthread_mutex_lock(_lock);
-	writeLog(_t_task, _t_levels, _t_nlevels, &tv, name, value);
+	write_log(_t_task, _t_levels, _t_nlevels, &tv, name, value);
 	pthread_mutex_unlock(_lock);
 }
 
-void wrhLogForward(char **info) {
+void wrh_save(char **info) {
 	char *task_str, *level_str;
 	int size;
 
-	if (!_t_initialized) threadInitialize();
+	if (!_t_initialized) thread_initialize();
 
 	if (_t_nlevels == 0) {
 		die("cannot forward an empty task");
 	} else {
 		_t_levels[_t_nlevels-1]++;
-		task_str = formatTask(_t_task);
-		level_str = formatLevel(_t_levels, _t_nlevels);
+		task_str = format_task(_t_task);
+		level_str = format_level(_t_levels, _t_nlevels);
 	}
 
 	size = snprintf(NULL, 0, "%s%s", task_str, level_str);
@@ -291,12 +194,12 @@ void wrhLogForward(char **info) {
 	snprintf(*info, size+1, "%s%s", task_str, level_str);
 }
 
-void wrhLogContinue(const char *const info) {
+void wrh_load(const char *const info) {
 	static __thread char temp[37];
 	int offset;
 	char *found;
 
-	if (!_t_initialized) threadInitialize();
+	if (!_t_initialized) thread_initialize();
 
 	strncpy(temp, info, 36);
 	temp[36] = '\0';
@@ -314,12 +217,12 @@ void wrhLogContinue(const char *const info) {
 	_t_continued = 1;
 }
 
-void wrhLogEnd(char *message, ...) {
+void wrh_pop(char *message, ...) {
 	struct timeval tv;
 	char value[1024];
 	va_list ap;
 
-	if (!_t_initialized) threadInitialize();
+	if (!_t_initialized) thread_initialize();
 	
 	gettimeofday(&tv, NULL);
 
@@ -334,9 +237,9 @@ void wrhLogEnd(char *message, ...) {
 	}
 	
 	pthread_mutex_lock(_lock);
-	writeLog(_t_task, _t_levels, _t_nlevels, &tv, "@finished", value);
+	write_log(_t_task, _t_levels, _t_nlevels, &tv, "@finished", value);
 	if (_t_nlevels == 1) {
-		flushLogs();
+		flush_logs();
 	}
 	pthread_mutex_unlock(_lock);
 
@@ -344,6 +247,6 @@ void wrhLogEnd(char *message, ...) {
 }
 
 
-void wrhLogDirectly(char *line) {
-	writeLine(line);
+void wrh_write(char *line) {
+	write_line(line);
 }

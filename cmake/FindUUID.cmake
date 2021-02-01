@@ -15,6 +15,7 @@ ExternalProject_Add(
 
     INSTALL_COMMAND make install
 )
+ExternalProject_Add_StepTargets(${EP_UUID} install)
 ExternalProject_Get_Property(${EP_UUID} SOURCE_DIR)
 ExternalProject_Get_Property(${EP_UUID} INSTALL_DIR)
 set(UUID_INSTALL_DIR ${INSTALL_DIR})
@@ -24,6 +25,9 @@ set(UUID_LINK_DIR ${INSTALL_DIR}/lib)
 set(UUID_LIBRARIES
     ${UUID_LINK_DIR}/libuuid.so
 )
+
+file(MAKE_DIRECTORY ${UUID_INCLUDE_DIR})
+file(MAKE_DIRECTORY ${UUID_LINK_DIR})
 
 add_library(
     UUID::UUID
@@ -40,6 +44,7 @@ target_include_directories(
     INTERFACE
         ${UUID_INCLUDE_DIR}
 )
+add_dependencies(UUID::UUID ${EP_UUID}-install)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
