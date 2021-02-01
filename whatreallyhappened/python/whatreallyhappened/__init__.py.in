@@ -15,7 +15,11 @@ __all__ = [
 ]
 
 
-libwhatreallyhappened = CDLL('libwhatreallyhappened.so')
+try:
+    libwhatreallyhappened = CDLL('libwhatreallyhappened.so')
+except OSError:
+    libwhatreallyhappened = CDLL('$<TARGET_FILE:whatreallyhappened>')
+
 
 wrh_open = libwhatreallyhappened.wrh_open
 wrh_open.restype = c_int

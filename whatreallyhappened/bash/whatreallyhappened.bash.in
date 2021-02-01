@@ -2,18 +2,21 @@
 
 die() { printf $'WhatReallyHappened Error: %s\n' "$*" >&2; exit 1; }
 
-if ! source ctypes.sh; then
-    if ! source @ctypes.sh_EXECUTABLE@; then
+if ! source ctypes.sh &>/dev/null; then
+    if ! source @ctypes.sh_EXECUTABLE@ &>/dev/null; then
+        source ctypes.sh
+        source @ctypes.sh_EXECUTABLE@
         die "Could not load ctypes.sh"
     fi
 fi
 
-if ! dlopen libwhatreallyhappened.so; then
-    if ! dlopen $<TARGET_FILE:whatreallyhappened>; then
+if ! dlopen libwhatreallyhappened.so &>/dev/null; then
+    if ! dlopen $<TARGET_FILE:whatreallyhappened> &>/dev/null; then
+        dlopen libwhatreallyhappened.so
+        dlopen $<TARGET_FILE:whatreallyhappened>
         die "Could not open libwhatreallyhappened.so"
     fi
 fi
-dlopen libwhatreallyhappened.so || die "Could not open libwhatreallyhappened.so"
 
 wrh_open() {
     local filename mode ret
