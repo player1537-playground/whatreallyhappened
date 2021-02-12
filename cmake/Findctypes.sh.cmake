@@ -27,6 +27,7 @@ ExternalProject_Get_Property(${EP_CTYPES_SH} INSTALL_DIR)
 set(ctypes.sh_INSTALL_DIR ${INSTALL_DIR})
 set(ctypes.sh_ROOT_DIR ${SOURCE_DIR})
 set(ctypes.sh_EXECUTABLE ${INSTALL_DIR}/bin/ctypes.sh)
+set(ctypes.sh_TARGET ${EP_CTYPES_SH}-install)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
@@ -35,4 +36,5 @@ find_package_handle_standard_args(
         ctypes.sh_INSTALL_DIR
         ctypes.sh_ROOT_DIR
         ctypes.sh_EXECUTABLE
+        ctypes.sh_TARGET
 )

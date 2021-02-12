@@ -18,9 +18,9 @@ configure_and_generate(
 )
 
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/build/timestamp
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/build-timestamp
     COMMAND ${PYTHON} ${CMAKE_CURRENT_BINARY_DIR}/setup.py sdist --format=zip
-    COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_BINARY_DIR}/build/timestamp
+    COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_BINARY_DIR}/build-timestamp
     DEPENDS
         ${CMAKE_CURRENT_BINARY_DIR}/whatreallyhappened.py
         ${CMAKE_CURRENT_BINARY_DIR}/setup.py
@@ -31,14 +31,14 @@ add_custom_target(
     whatreallyhappened_python
     ALL
     DEPENDS
-        ${CMAKE_CURRENT_BINARY_DIR}/build/timestamp
+        ${CMAKE_CURRENT_BINARY_DIR}/build-timestamp
 )
 
 install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/dist/whatreallyhappened-${CMAKE_PROJECT_VERSION}.linux-x86_64.zip
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/dist/whatreallyhappened-${CMAKE_PROJECT_VERSION}.zip
     TYPE LIB
 )
 
-#install(
-#    CODE "execute_process(COMMAND ${PYTHON} ${CMAKE_CURRENT_BINARY_DIR}/setup.py install)"
-#)
+install(
+    CODE "execute_process(COMMAND ${PYTHON} ${CMAKE_CURRENT_BINARY_DIR}/setup.py install)"
+)

@@ -5,6 +5,8 @@
 from __future__ import annotations
 from ctypes import *
 from os import fspath, fsencode
+from string import printable
+import re
 
 
 __all__ = [
@@ -55,6 +57,22 @@ wrh_write.argtypes = [c_char_p]
 default_encoding = 'utf-8'
 
 
+# Thanks https://stackoverflow.com/a/13928029
+# TODO: I couldn't get this to work... 
+#   NONPRINTABLE_RE = re.compile(r'([^' + re.escape(printable) + r'])')
+NONPRINTABLE_RE = re.compile(r'[\x00-\x1f]')  # lmao unicode
+NONPRINTABLE_MAP = {
+    '\n': r'\n',
+    '\r': r'\r',
+    '\t': r'\t',
+}
+def escape_nonprintable(s: str) -> str:
+    def replace(match) -> str:
+        s = match.group()
+        return NONPRINTABLE_MAP.get(s, r'\x%02x' % (ord(s),))
+    return NONPRINTABLE_RE.sub(replace, s)
+
+
 class InitializationError(Exception):
     pass
 
@@ -76,6 +94,7 @@ def log(name: str, message: str, *args, encoding=None) -> None:
 
     name = name.encode(encoding)
     formatted = message % args
+    formatted = escape_nonprintable(formatted)
     formatted = formatted.encode(encoding)
     wrh_log(name, b"%s", formatted)
 
@@ -85,6 +104,7 @@ def push(message: str, *args, encoding=None) -> None:
         encoding = default_encoding
 
     formatted = message % args
+    formatted = escape_nonprintable(formatted)
     formatted = formatted.encode(encoding)
     wrh_push(b"%s", formatted)
 
@@ -94,6 +114,7 @@ def pop(message: str, *args, encoding=None) -> None:
         encoding = default_encoding
 
     formatted = message % args
+    formatted = escape_nonprintable(formatted)
     formatted = formatted.encode(encoding)
     wrh_pop(b"%s", formatted)
 

@@ -48,6 +48,7 @@ go-exec() {
 	export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+${LD_LIBRARY_PATH:?}:}${stage:?}/lib
 	export PATH=${build:?}/whatreallyhappened/bash/ctypes.sh-prefix/bin${PATH:+:${PATH:?}}
 	export PATH=${stage:?}/bin${PATH:+:${PATH:?}}
+    export PYTHONPATH=${stage:?}/lib/whatreallyhappened-0.1.0.zip/whatreallyhappened-0.1.0${PYTHONPATH:+:${PYTHONPATH:?}}
 	exec "$@"
 }
 
