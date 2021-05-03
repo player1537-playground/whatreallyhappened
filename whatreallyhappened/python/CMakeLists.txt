@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.19.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.0.0 FATAL_ERROR)
 include(ConfigureAndGenerate)
 
 # Thanks https://bloerg.net/2012/11/10/cmake-and-distutils.html

@@ -12,6 +12,7 @@ static int _initialized = 0;
 static pthread_mutex_t *_lock;
 static pthread_cond_t *_cond;
 static FILE *_file;
+static int _always_flush = 0;
 static __thread int _t_initialized = 0;
 static __thread int _t_continued;
 static __thread int *_t_levels;
@@ -78,6 +79,10 @@ static void write_log(uuid_t task, int *levels, int nlevels, struct timeval *tv,
 	level_str = format_level(levels, nlevels);
 
 	fprintf(_file, "%s%s\t%ld.%06ld\t%s\t%s\n", task_str, level_str, tv->tv_sec, tv->tv_usec, key, value);
+
+	if (_always_flush) {
+		fflush(_file);
+	}
 }
 
 static void flush_logs(void) {
@@ -95,7 +100,7 @@ static void thread_initialize(void) {
 	_t_continued = 0;
 }
 
-int wrh_open(char *filename, char *mode) {
+int wrh_open(char *filename, char *mode, int always_flush) {
 	FILE *file;
 
 	if (_initialized) {
@@ -114,6 +119,8 @@ int wrh_open(char *filename, char *mode) {
 	pthread_cond_init(_cond, NULL);
 
 	_file = file;
+
+	_always_flush = always_flush;
 
 	_initialized = 1;
 

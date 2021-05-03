@@ -27,7 +27,7 @@ except OSError:
 
 wrh_open = libwhatreallyhappened.wrh_open
 wrh_open.restype = c_int
-wrh_open.argtypes = [c_char_p, c_char_p]
+wrh_open.argtypes = [c_char_p, c_char_p, c_int]
 
 wrh_log = libwhatreallyhappened.wrh_log
 wrh_log.restype = None
@@ -77,13 +77,14 @@ class InitializationError(Exception):
     pass
 
 
-def open(file: PathLike, mode: str='w', *, encoding=None) -> None:
+def open(file: PathLike, mode: str='w', *, encoding=None, always_flush=False) -> None:
     if encoding is None:
         encoding = default_encoding
 
     file = fsencode(file)
     mode = mode.encode(encoding)
-    ret = wrh_open(file, mode)
+    always_flush = 1 if always_flush else 0
+    ret = wrh_open(file, mode, always_flush)
     if ret != 0:
         raise InitializationError()
 

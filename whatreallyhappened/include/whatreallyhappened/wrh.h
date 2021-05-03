@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <uuid/uuid.h>
 
-int wrh_open(char *filename, char *mode);
+int wrh_open(char *filename, char *mode, int always_flush);
 
 void wrh_log(char *name, char *message, ...);
 
